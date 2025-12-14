@@ -44,7 +44,7 @@ const githubData = {
 }
  
 
-app.get('/github' , (req , res) => {
+app.get('/api/github' , (req , res) => {
     res.send(githubData);
 })
 
