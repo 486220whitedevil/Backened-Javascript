@@ -1,29 +1,34 @@
-import {v2 as cloudinary} from "cloudinary"
+import { v2 as cloudinary } from "cloudinary"
 
 import fs from "fs"
 
 
-cloudinary.config({ 
-  cloud_name: process.env.CLOUDINARY_CLOUD_NAME, 
-  api_key: process.env.CLOUDINARY_API_KEY, 
-  api_secret: process.env.CLOUDINARY_API_SECRET
+cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET
 });
 
 const uploadOnCloudinary = async (localFilePath) => {
     try {
-        if(!localFilePath) return null
-        // upload files on cloudinary
-        const response =  await cloudinary.uploader.upload(localFilePath, {
-            resource_type: "auto"
-         })
+        if (!localFilePath) return null;
 
-         // file has been uploaded successfully
-         console.log("File is uploaded on Cloudinary successfully" , response.url)
-         return response;
+        const response = await cloudinary.uploader.upload(localFilePath, {
+            resource_type: "auto",
+        });
+        
+        fs.unlinkSync(localFilePath);
+        return response;
     } catch (error) {
-        fs.unlinkSync(localFilePath) // remove the file locally saved temporary on server operatino got failed
+        console.error("Cloudinary error:", error);
+
+        if (fs.existsSync(localFilePath)) {
+            fs.unlinkSync(localFilePath);
+        }
+
         return null;
     }
-}
+};
 
-export {uploadOnCloudinary}
+
+export { uploadOnCloudinary }
