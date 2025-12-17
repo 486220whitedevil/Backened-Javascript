@@ -2,7 +2,7 @@ import { asyncHandler } from "../utils/asynchandler.js";
 import { ApiError } from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
 import { uploadOnCloudinary } from "../utils/cloudinary.js"
-
+import jwt from "jsonwebtoken"
 import { ApiResponse } from "../utils/ApiResponse.js"
 
 
@@ -41,7 +41,6 @@ export const registerUser = asyncHandler(async (req, res) => {
   // return response 
 
   const { fullname, email, username, password } = req.body
-  console.log("email: ", email);
 
   if ([fullname, email, username, password].some((field) =>
     field?.trim() === "")) {
@@ -180,6 +179,53 @@ export const logOutUser = asyncHandler(async (req, res) => {
     .clearCookie("AccessToken", options)
     .clearCookie("RefreshToken", options)
     .json(new ApiResponse(200, {}, "User Logged Out"))
+})
+
+
+export const refreshAccessToken = asyncHandler ( async (req, res ) => {
+  const incomingRefreshToken = req.cookies.RefreshToken || req.body.RefreshToken
+
+  if(!incomingRefreshToken){
+    throw new ApiError(401, "Unauthorized request")
+  }
+
+  try {
+    const decodedToken = jwt.verify(incomingRefreshToken, process.env.REFRESH_TOKEN_SECRET)
+  
+    const user = await User.findById(decodedToken?._id)
+  
+    if(!user){
+      throw new ApiError(401, "Invalid refresh token")
+    }
+  
+    if(incomingRefreshToken !== user?.RefreshToken){
+      throw new ApiError(401, "Refresh token is expired or used")
+    }
+  
+    const options = {
+      httpOnly: true,
+      secure: true
+    }
+  
+    const {AccessToken, newRefreshToken} = await generateAccessAndRefreshToken(user._id)
+  
+    return res
+    .status(200)
+    .cookie("AccessToken", AccessToken, options)
+    .cookie("RefreshToken", newRefreshToken, options)
+    .json(
+      new ApiResponse(
+        200,
+        {
+          AccessToken, RefreshToken: newRefreshToken
+        },
+        "Access token refreshed"
+      )
+    )
+  } catch (error) {
+    throw new ApiError(401, "error?.message" || "Invalid Refresh Token")
+  }
+
 })
 
 // export {registerUser}

@@ -6,7 +6,7 @@ import { User } from "../models/user.model.js";
 
 import jwt from "jsonwebtoken"
 
-export const verifyJWT = asyncHandler(async (req, res, next) => {
+export const verifyJWT = asyncHandler(async (req, _, next) => {
     try {
 
         // there is a bug which has to be fixed -> accessToken where it exist
