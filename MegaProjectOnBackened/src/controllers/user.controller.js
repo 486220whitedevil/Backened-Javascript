@@ -72,8 +72,8 @@ export const registerUser = asyncHandler(async (req, res) => {
   const coverImage = await uploadOnCloudinary(coverImageLocalPath)
   console.log(avatar)
 
-  if (!avatar) {
-    throw new ApiError(400, " Avatar files are required ")
+  if (!coverImage || !coverImage.url) {
+    throw new ApiError(400, " CoverImage files are required ")
   }
 
   const user = await User.create({
@@ -160,8 +160,8 @@ export const logOutUser = asyncHandler(async (req, res) => {
   await User.findByIdAndUpdate(
     req.user._id,
     {
-      $set: {
-        RefreshToken: undefined
+      $unset: {
+        RefreshToken: 1
       }
 
     },
@@ -186,8 +186,9 @@ export const logOutUser = asyncHandler(async (req, res) => {
 export const refreshAccessToken = asyncHandler(async (req, res) => {
   const incomingRefreshToken = req.cookies.RefreshToken || req.body.RefreshToken
 
+  console.log(req.cookies.RefreshToken)
   if (!incomingRefreshToken) {
-    throw new ApiError(401, "Unauthorized request")
+    throw new ApiError(401, "RefreshToken nahi mil raha hai")
   }
 
   try {
@@ -224,7 +225,7 @@ export const refreshAccessToken = asyncHandler(async (req, res) => {
         )
       )
   } catch (error) {
-    throw new ApiError(401, "error?.message" || "Invalid Refresh Token")
+    throw new ApiError(401, error?.message || "Invalid Refresh Token")
   }
 
 })
@@ -277,7 +278,7 @@ export const updateAccountDetails = asyncHandler(async (req, res) => {
 export const updateUserAvatar = asyncHandler(async (req, res) => {
   const avatarLocalPath = req.file?.path
 
-  if (avatarLocalPath) {
+  if (!avatarLocalPath) {
     throw new ApiError(400, "Avatar file is missing")
   }
 
@@ -410,8 +411,8 @@ export const getWatchHistory = asyncHandler(async (req, res) => {
               pipeline: [
                 {
                   $project: { // owner details ke andar kya kya ana chahiyr vo yaha written hai
-                    username: 1, 
-                    fullname: 1, 
+                    username: 1,
+                    fullname: 1,
                     avatar: 1
                   }
                 }
@@ -419,8 +420,8 @@ export const getWatchHistory = asyncHandler(async (req, res) => {
             }
           },
           {
-            $addFields:{
-              owner:{
+            $addFields: {
+              owner: {
                 $first: "$owner"
               }
             }
@@ -431,8 +432,8 @@ export const getWatchHistory = asyncHandler(async (req, res) => {
   ])
 
   return res
-  .status(200)
-  .json( new ApiResponse(200, user[0].watchHistory,"Watch History fetched Successfully"))
+    .status(200)
+    .json(new ApiResponse(200, user[0].watchHistory, "Watch History fetched Successfully"))
 })
 
 // export {registerUser}
