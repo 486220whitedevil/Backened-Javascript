@@ -70,7 +70,6 @@ export const registerUser = asyncHandler(async (req, res) => {
   }
 
   const coverImage = await uploadOnCloudinary(coverImageLocalPath)
-  console.log(avatar)
 
   if (!coverImage || !coverImage.url) {
     throw new ApiError(400, " CoverImage files are required ")
@@ -123,9 +122,7 @@ export const loginUser = asyncHandler(async (req, res) => {
   if (!user) {
     throw new ApiError(404, "User not found")
   }
-
   const isPasswordValid = await user.isPasswordCorrect(password)
-
   if (!isPasswordValid) {
     throw new ApiError(404, "Invalid User Credential")
   }
