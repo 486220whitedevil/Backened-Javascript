@@ -316,7 +316,7 @@ export const updateUserCoverImage = asyncHandler(async (req, res) => {
 })
 
 export const getUserChannelProfile = asyncHandler(async (req, res) => {
-  const { username } = req.params // getting username from the server if present
+  const { username } = req.params // getting username from the server if present throw the link
 
   if (!username?.trim()) {
     throw new ApiError(400, "User is missing")
